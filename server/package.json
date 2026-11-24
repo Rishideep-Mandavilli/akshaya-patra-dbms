@@ -1,0 +1,16 @@
+{
+  "name": "akshaya-patra-server",
+  "version": "1.0.0",
+  "description": "Express REST API backend for Akshaya Patra DBMS System",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node tests/api.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}
