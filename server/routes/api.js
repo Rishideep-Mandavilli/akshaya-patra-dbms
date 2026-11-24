@@ -19,8 +19,8 @@ const asyncHandler = (fn) => (req, res, next) => {
 // ============================================================================
 router.get('/dashboard/stats', asyncHandler(async (req, res) => {
   const [mealsRes, dispatchRes, schoolsRes, alertRes, donationRes] = await Promise.all([
-    db.query(`SELECT COALESCE(SUM(actual_servings), 0) AS total_cooked_today, COUNT(*) AS batches_count FROM meal_batches WHERE prep_date = CURRENT_DATE AND status = 'COMPLETED'`),
-    db.query(`SELECT COALESCE(SUM(meals_dispatched), 0) AS total_dispatched_today, COUNT(DISTINCT institution_id) AS schools_delivered_today FROM dispatch_deliveries WHERE dispatch_date = CURRENT_DATE`),
+    db.query(`SELECT COALESCE(SUM(actual_servings), 0) AS total_cooked_today, COUNT(*) AS batches_count FROM meal_batches WHERE prep_date >= CURRENT_DATE - INTERVAL '1 day' AND status = 'COMPLETED'`),
+    db.query(`SELECT COALESCE(SUM(meals_dispatched), 0) AS total_dispatched_today, COUNT(DISTINCT institution_id) AS schools_delivered_today FROM dispatch_deliveries WHERE dispatch_date >= CURRENT_DATE - INTERVAL '1 day'`),
     db.query(`SELECT COUNT(*) AS total_schools, COALESCE(SUM(total_enrolled), 0) AS total_students FROM institutions WHERE active_status = TRUE`),
     db.query(`SELECT COUNT(*) AS low_stock_count FROM v_low_stock_alerts WHERE stock_health_status != 'NORMAL'`),
     db.query(`SELECT COALESCE(SUM(amount_inr), 0) AS total_donations_inr, COUNT(*) AS donations_count FROM donations`)
