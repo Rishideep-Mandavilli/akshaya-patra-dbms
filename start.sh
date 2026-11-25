@@ -6,7 +6,7 @@ cd "$DIR"
 
 echo "================================================================="
 echo "   AKSHAYA PATRA - FOOD DISTRIBUTION MANAGEMENT SYSTEM"
-echo "   DBMS Academic Project (Student: Rutwik)"
+echo "   Mega-Kitchen Operations & Distribution Platform"
 echo "================================================================="
 
 # 1. Database Check & Setup

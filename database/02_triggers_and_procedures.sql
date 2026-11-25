@@ -374,11 +374,11 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     SELECT 
-        s.name AS sponsor_name,
-        COALESCE(SUM(d.amount_inr), 0) AS total_donated_inr,
+        s.name::VARCHAR(150) AS sponsor_name,
+        COALESCE(SUM(d.amount_inr), 0)::NUMERIC(12,2) AS total_donated_inr,
         (COALESCE(SUM(d.amount_inr), 0) / 20.0)::BIGINT AS meals_subsidized, -- standard subsidy @ ₹20/meal
-        COUNT(DISTINCT d.earmarked_institution_id) AS schools_supported,
-        MAX(inst.name) AS earmarked_school_name,
+        COUNT(DISTINCT d.earmarked_institution_id)::BIGINT AS schools_supported,
+        MAX(inst.name)::VARCHAR(150) AS earmarked_school_name,
         MIN(d.donation_date) AS first_donation_date,
         MAX(d.donation_date) AS latest_donation_date
     FROM sponsors s
