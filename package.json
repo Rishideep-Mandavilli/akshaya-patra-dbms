@@ -1,0 +1,20 @@
+{
+  "name": "akshaya-patra-dbms",
+  "version": "1.0.0",
+  "description": "Akshaya Patra Mega-Kitchen Food Distribution Management System",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "client": "cd client && npm run dev",
+    "test": "cd server && npm test",
+    "db:setup": "node database/setup_cloud_db.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}

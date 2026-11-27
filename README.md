@@ -1,11 +1,10 @@
 # Akshaya Patra – Food Distribution Management System
-## DBMS Subject Awareness & Academic Capstone Project
+## Mega-Kitchen Operations & Distribution Platform
 
-**Student:** Rutwik  
-**Course:** Database Management Systems (DBMS)  
 **Database Engine:** PostgreSQL 16 (PL/pgSQL)  
-**Backend:** Node.js (v25) / Express.js REST API  
+**Backend:** Node.js (v20+) / Express.js REST API  
 **Frontend:** React 19 / Vite + Tailwind CSS v4 + Lucide Icons  
+**Deployment Ready:** Vercel, Render, Railway, Docker  
 
 ---
 
@@ -104,10 +103,42 @@ cd server && npm test
 
 ---
 
-## 🎓 Academic Viva Cheat Sheet
+## 🌐 Cloud Deployment Guide
 
-Check [`docs/VIVA_QUESTIONS_AND_ANSWERS.md`](docs/VIVA_QUESTIONS_AND_ANSWERS.md) for detailed answers to top questions:
-- *Why BCNF instead of 3NF?*
-- *How does the trigger maintain ACID properties during batch completion?*
-- *What is the difference between `RANK()` and `DENSE_RANK()`?*
-- *How do CTEs optimize complex calculations compared to temporary tables?*
+### Option 1: Deploy to Vercel (Frontend + Serverless API)
+
+Vercel hosts the React frontend and runs the Express API as serverless functions (`api/index.js`).
+
+#### Step 1: Create a Free Cloud PostgreSQL Database
+Since Vercel is serverless, you need a cloud PostgreSQL instance:
+- **[Neon.tech](https://neon.tech)** (Recommended: Free Serverless PostgreSQL, 0.5 GB, 1-click Vercel integration)
+- **[Supabase.com](https://supabase.com)** (Free PostgreSQL, 500 MB)
+- Copy your connection string (`postgres://user:password@host/database?sslmode=require`).
+
+#### Step 2: Initialize Database Schema & Seed Data
+Run the automated cloud migration script from your terminal:
+```bash
+DATABASE_URL="your_neon_or_supabase_connection_string" npm run db:setup
+```
+This automatically applies all 12 normalized tables, PL/pgSQL triggers, views, and seed data.
+
+#### Step 3: Deploy on Vercel
+1. Push your repository to GitHub.
+2. In [Vercel Dashboard](https://vercel.com), click **Add New Project** $\rightarrow$ **Import** your repository.
+3. In the project settings, add the Environment Variable:
+   - `DATABASE_URL` = `your_neon_or_supabase_connection_string`
+4. Click **Deploy**. Vercel will build the frontend and serve both the web application and API endpoints seamlessly!
+
+---
+
+### Option 2: Deploy to Render (All-in-One: Frontend + API + PostgreSQL)
+
+Render can host both the Node Web Service and a managed PostgreSQL database together.
+
+1. Push your repository to GitHub.
+2. In [Render Dashboard](https://dashboard.render.com), click **New +** $\rightarrow$ **Blueprint**.
+3. Connect your repository. Render will detect [`render.yaml`](render.yaml) and automatically create:
+   - A free managed PostgreSQL database (`akshaya-patra-postgres`)
+   - A Node.js web service running the application
+4. Once deployed, run `npm run db:setup` with the database connection string from Render.
+

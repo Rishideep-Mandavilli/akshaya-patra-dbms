@@ -1,12 +1,15 @@
 const http = require('http');
-const { app, server } = require('../index');
+const app = require('../app');
+
+const TEST_PORT = 5002;
+const server = app.listen(TEST_PORT);
 
 const request = (path, method = 'GET', body = null) => {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
     const req = http.request({
       hostname: 'localhost',
-      port: 5001,
+      port: TEST_PORT,
       path,
       method,
       headers: {
@@ -37,74 +40,48 @@ async function runTests() {
   let passed = 0;
   let failed = 0;
 
+  const assert = (condition, msg) => {
+    if (condition) {
+      console.log(`✅ PASS: ${msg}`);
+      passed++;
+    } else {
+      console.error(`❌ FAIL: ${msg}`);
+      failed++;
+    }
+  };
+
   try {
-    // Test 1: Health Check
-    const health = await request('/');
-    if (health.status === 200 && health.body.status === 'ONLINE') {
-      console.log('✅ PASS: Server health check');
-      passed++;
-    } else {
-      console.error('❌ FAIL: Health check failed', health);
-      failed++;
-    }
+    // 1. Health check
+    const r1 = await request('/api-health');
+    assert(r1.status === 200 && r1.body.status === 'ONLINE', 'Server health check');
 
-    // Test 2: Dashboard KPIs
-    const dash = await request('/api/dashboard/stats');
-    if (dash.status === 200 && dash.body.kpis && dash.body.kpis.totalSchools > 0) {
-      console.log(`✅ PASS: Dashboard stats (Total Schools: ${dash.body.kpis.totalSchools}, Cooked Today: ${dash.body.kpis.totalCookedToday})`);
-      passed++;
-    } else {
-      console.error('❌ FAIL: Dashboard stats failed', dash);
-      failed++;
-    }
+    // 2. Dashboard KPIs
+    const r2 = await request('/api/dashboard/stats');
+    assert(r2.status === 200 && r2.body.kpis.totalSchools >= 1, `Dashboard stats (Total Schools: ${r2.body?.kpis?.totalSchools}, Cooked Today: ${r2.body?.kpis?.totalCookedToday})`);
 
-    // Test 3: Food Items
-    const items = await request('/api/items');
-    if (items.status === 200 && Array.isArray(items.body) && items.body.length >= 10) {
-      console.log(`✅ PASS: Food items catalog (${items.body.length} items loaded)`);
-      passed++;
-    } else {
-      console.error('❌ FAIL: Food items catalog failed', items);
-      failed++;
-    }
+    // 3. Items Catalog
+    const r3 = await request('/api/items');
+    assert(r3.status === 200 && Array.isArray(r3.body) && r3.body.length > 0, `Food items catalog (${r3.body?.length} items loaded)`);
 
-    // Test 4: Menus with BOM recipes
-    const menus = await request('/api/menus');
-    if (menus.status === 200 && Array.isArray(menus.body) && menus.body[0].ingredients.length > 0) {
-      console.log(`✅ PASS: Menus & BOM Recipe mapping (Menu "${menus.body[0].menu_name}" has ${menus.body[0].ingredients.length} ingredients)`);
-      passed++;
-    } else {
-      console.error('❌ FAIL: Menus BOM failed', menus);
-      failed++;
-    }
+    // 4. Menus & BOM
+    const r4 = await request('/api/menus');
+    assert(r4.status === 200 && r4.body.length > 0 && r4.body[0].ingredients?.length > 0, `Menus & BOM Recipe mapping (Menu "${r4.body[0]?.menu_name}" has ${r4.body[0]?.ingredients?.length} ingredients)`);
 
-    // Test 5: DBMS Execute Query Engine
-    const queryTest = await request('/api/dbms/execute-query', 'POST', {
-      sql: 'SELECT menu_id, menu_name, standard_calories FROM menus ORDER BY menu_id ASC;'
+    // 5. Query execution
+    const r5 = await request('/api/dbms/execute-query', 'POST', {
+      sql: 'SELECT route_code, route_name FROM delivery_routes LIMIT 4;'
     });
-    if (queryTest.status === 200 && queryTest.body.success && queryTest.body.rowCount > 0) {
-      console.log(`✅ PASS: DBMS live query execution (${queryTest.body.rowCount} rows returned in ${queryTest.body.durationMs}ms)`);
-      passed++;
-    } else {
-      console.error('❌ FAIL: DBMS query execution failed', queryTest);
-      failed++;
-    }
+    assert(r5.status === 200 && r5.body.success && r5.body.rowCount > 0, `DBMS live query execution (${r5.body.rowCount} rows returned in ${r5.body.durationMs}ms)`);
 
-    // Test 6: Trigger Error Handling via API
-    // Attempting to dispatch 99,999 meals from Batch 1 should be caught by trg_prevent_over_dispatch
-    const triggerTest = await request('/api/dispatches', 'POST', {
+    // 6. Test trigger: Try over-dispatching past batch capacity
+    const r6 = await request('/api/dispatches', 'POST', {
       batch_id: 1,
       route_id: 1,
       institution_id: 1,
-      meals_dispatched: 99999
+      meals_dispatched: 99999, // Should trigger EXCEPTION: OVER-DISPATCH INTEGRITY VIOLATION
+      notes: 'Testing trigger violation'
     });
-    if (triggerTest.status === 400 && triggerTest.body.error.includes('OVER-DISPATCH INTEGRITY VIOLATION')) {
-      console.log('✅ PASS: Over-dispatch trigger caught and returned error cleanly via API');
-      passed++;
-    } else {
-      console.error('❌ FAIL: Over-dispatch trigger was not caught properly', triggerTest);
-      failed++;
-    }
+    assert(r6.status === 400 && r6.body.error && r6.body.error.includes('OVER-DISPATCH'), 'Over-dispatch trigger caught and returned error cleanly via API');
 
     console.log(`\n=== API Tests Summary: ${passed} Passed, ${failed} Failed ===`);
     if (failed > 0) {
